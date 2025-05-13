@@ -10,7 +10,30 @@ M.config = {
 
 -- Function to trigger
 function M.greet()
-	print(M.config.message)
+	local mode = vim.fn.mode()
+	local text = ""
+
+	if mode:match("[vV]") then -- Visual/Visual Line/Visual Block mode
+		-- Save and restore register x to avoid clobbering
+		local saved_reg = vim.fn.getreg("x")
+		local saved_reg_type = vim.fn.getregtype("x")
+
+		-- Yank selected text silently to register x
+		vim.cmd('silent normal! "xy')
+		text = vim.fn.getreg("x")
+
+		-- Restore original register x content
+		vim.fn.setreg("x", saved_reg, saved_reg_type)
+	else -- Normal mode
+		text = vim.api.nvim_get_current_line()
+	end
+
+	local ft = vim.bo.filetype
+	if ft == "" then
+		ft = "unknown"
+	end
+
+	print("Selected text: " .. text .. " - " .. ft)
 end
 
 -- Setup handler
